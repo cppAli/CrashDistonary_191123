@@ -1,0 +1,196 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace CrashDistonary_191123
+{
+    class Program
+    {
+        static List<string> bannedWords = new List<string>();
+        static List<string> textSearch = new List<string>();
+        static readonly string bannedWordsFilePath = "CrashWord.txt"; //встроенный словарь
+
+
+        static void Main()
+        {
+            Console.OutputEncoding = System.Text.Encoding.Unicode;
+            Console.WriteLine("їі");
+            Console.WriteLine("Перед запуском замены текста открыть все файли для записи - открыть словать или добавить текст, \nвторое- открыть текст введите название, \nслед шаг - запустить редактор");
+
+            while (true)
+            {
+                Console.WriteLine("\n1. Додати нові слова");
+                Console.WriteLine("2. Завантажити заборонені слова з файлу");
+                Console.WriteLine("3. Завантажити текст для огляу з файлу");
+                Console.WriteLine("4. Замінити заборонені слова та зберегти у новий файл");
+                Console.WriteLine("5. Зупинити роботу");
+                string input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        AddBannedWords(bannedWordsFilePath);
+                        break;
+                    case "2":
+                        LoadBannedWordsFromFile(bannedWordsFilePath);
+                        break;
+                    case "3":
+                        LoadTextFromFile();
+                        break;
+                    case "4":
+                        ReplaceBannedWords();
+                        break;
+                    case "5":
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("Невірний вибір. Спробуйте знову.\n");
+                        break;
+                }
+                //Console.Clear();
+
+            };
+
+
+        }
+        static void AddBannedWords(string bannedWordsFilePath)
+        {
+            Console.WriteLine("Додати нові слова: Так - 1, Ні - 2");
+            string response = Console.ReadLine();
+
+            if (response == "1")
+            {
+                Console.WriteLine("Введіть заборонені слова, розділені пробілами:");
+                string[] wordsInput = Console.ReadLine().Split(' ');
+
+                // Загрузить существующий список из файла
+                try
+                {
+                    bannedWords = new List<string>(File.ReadAllLines(bannedWordsFilePath).ToList());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка при чтении файла с запрещенными словами: {ex.Message}");
+                    return;
+                }
+
+                // Добавить новые слова к существующему списку
+                bannedWords.AddRange(wordsInput);
+
+                // Вывести обновленный список слов
+                Console.WriteLine("\nОновлений список слів:");
+                foreach (string word in bannedWords)
+                {
+                    Console.WriteLine(word);
+                }
+
+                // Сохранить обновленный список обратно в файл
+                try
+                {
+                    File.WriteAllLines(bannedWordsFilePath, bannedWords);
+                    Console.WriteLine("Список слів успішно оновлено в файлі.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Помилка при збереженні файлу з забороненими словами: {ex.Message}");
+                }
+            }
+            else
+            {
+                LoadBannedWordsFromFile(bannedWordsFilePath);
+            }
+        }
+
+
+        static void LoadBannedWordsFromFile(string bannedWordsFilePath)
+        {
+            Console.WriteLine("\nЗавантаження словника <Crash Word>:");
+            try
+            {
+
+                bannedWords = new List<string>(File.ReadAllLines(bannedWordsFilePath).ToList());
+
+                foreach (string line in bannedWords)
+                {
+                    // Обработка каждой строки файла
+                    Console.WriteLine(line);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при чтении файла с запрещенными словами: {ex.Message}");
+            }
+        }
+
+        static void LoadTextFromFile()
+        {
+            Console.WriteLine("Введіть назву файлу, що підлягає редагуванню:\n");
+            string filePath = Console.ReadLine();
+            try
+            {
+                textSearch = new List<string>(File.ReadAllLines(filePath).ToList());
+                foreach (string line in textSearch)
+                {
+                    // Обработка каждой строки файла
+                    Console.WriteLine(line);
+                }
+                Console.WriteLine("\n");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Помилка при завантаженні: {ex.Message}");
+            }
+        }
+        static void CloseApp()
+        {
+
+        }
+
+        static void ReplaceBannedWords()
+        {
+            List<string> modifiedText = new List<string>();
+
+            foreach (string line in textSearch)
+            {
+                string modifiedLine = line;
+
+                foreach (string bannedWord in bannedWords)
+                {
+                    int index = modifiedLine.IndexOf(bannedWord, StringComparison.OrdinalIgnoreCase);
+
+                    while (index != -1)
+                    {
+                        modifiedLine = modifiedLine.Remove(index, bannedWord.Length).Insert(index, "****");
+
+                        index = modifiedLine.IndexOf(bannedWord, index + 4, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+
+                modifiedText.Add(modifiedLine);
+            }
+
+            // Save modified text to a new file
+            try
+            {
+                File.WriteAllLines("ModifiedText.txt", modifiedText);
+                Console.WriteLine("Заборонені слова замінено та збережено у новий файл 'ModifiedText.txt'.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Помилка при збереженні файлу: {ex.Message}");
+            }
+
+            modifiedText = new List<string>(File.ReadAllLines("ModifiedText.txt").ToList());
+            foreach (string line in modifiedText)
+            {
+                // Обработка каждой строки файла
+                Console.WriteLine(line);
+            }
+            Console.WriteLine("\n");
+        }
+
+    }
+}
